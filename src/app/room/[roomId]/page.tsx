@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Trash2, Check, Eye, RefreshCcw, Minus } from "lucide-react";
 
 type Player = {
   id: string;
@@ -243,17 +244,18 @@ export default function RoomPage() {
                       {player.vote ?? "-"}
                     </span>
                   ) : player.vote ? (
-                    <span className="text-green-400 text-lg">✔</span>
+                    <Check className="text-green-400 w-5 h-5" />
                   ) : (
-                    <span className="text-gray-500 text-lg">—</span>
+                    <Minus className="text-gray-500 w-5 h-5" />
                   )}
+
                   {isHost && player.id !== ownerId && (
                     <Button
                       onClick={() => handleRemovePlayer(player.id)}
                       variant="destructive"
-                      className="w-8 h-8 p-0 rounded-full text-white"
+                      className="w-8 h-8 p-0 rounded-full flex items-center justify-center hover:cursor-pointer"
                     >
-                      🗑
+                      <Trash2 className="w-4 h-4 text-white" />
                     </Button>
                   )}
                 </div>
@@ -266,16 +268,16 @@ export default function RoomPage() {
             {!roomRevealed ? (
               <Button
                 onClick={handleReveal}
-                className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold hover:cursor-pointer"
+                className="flex items-center gap-2 bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold hover:cursor-pointer"
               >
-                Revelar votos
+                <Eye className="w-4 h-4" /> Revelar votos
               </Button>
             ) : (
               <Button
                 onClick={handleReset}
-                className="bg-red-400 hover:bg-red-500 text-zinc-900 font-bold hover:cursor-pointer"
+                className="flex items-center gap-2 bg-red-400 hover:bg-red-500 text-zinc-900 font-bold hover:cursor-pointer"
               >
-                Nova votação
+                <RefreshCcw className="w-4 h-4" /> Nova votação
               </Button>
             )}
           </div>
