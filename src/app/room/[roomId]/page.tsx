@@ -41,6 +41,12 @@ type RoomData = {
   ownerId?: string;
   revealed?: boolean;
   voteOptions?: string[];
+  createdAt?: any;
+};
+
+type Round = {
+  votes: { [playerId: string]: string };
+  createdAt: any;
 };
 
 const SCALE_OPTIONS: { [key: string]: string[] } = {
@@ -66,6 +72,10 @@ export default function RoomPage() {
   const [voteOptions, setVoteOptions] = useState<string[]>(
     SCALE_OPTIONS.default
   );
+  const [createdAt, setCreatedAt] = useState<Date | null>(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let unsubAuth: (() => void) | undefined;
@@ -88,8 +98,15 @@ export default function RoomPage() {
       const data = snap.data() as RoomData;
       setRoomRevealed(Boolean(data.revealed));
       setOwnerId(data.ownerId ?? null);
-      if (auth.currentUser) setIsHost(data.ownerId === auth.currentUser.uid);
       setVoteOptions(data.voteOptions ?? SCALE_OPTIONS.default);
+      if (auth.currentUser) setIsHost(data.ownerId === auth.currentUser.uid);
+      if (data.createdAt) {
+        const created = data.createdAt.toDate();
+        setCreatedAt(created);
+        const diff = 24 * 60 * 60 * 1000 - (Date.now() - created.getTime());
+        setTimeLeft(diff > 0 ? diff : 0);
+        if (diff <= 0) router.push("/");
+      }
     });
 
     const unsubPlayers = onSnapshot(q, (qsnap: QuerySnapshot<DocumentData>) => {
@@ -123,6 +140,19 @@ export default function RoomPage() {
       unsubPlayers();
     };
   }, [roomId, router]);
+
+  useEffect(() => {
+    if (!createdAt) return;
+    const interval = setInterval(() => {
+      const diff = 24 * 60 * 60 * 1000 - (Date.now() - createdAt.getTime());
+      setTimeLeft(diff > 0 ? diff : 0);
+      if (diff <= 0) {
+        clearInterval(interval);
+        router.push("/");
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt, router]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +194,12 @@ export default function RoomPage() {
       typeof roomId !== "string"
     )
       return;
+    const votes: { [key: string]: string } = {};
+    players.forEach((p) => (votes[p.id] = p.vote ?? "-"));
+    await setDoc(doc(collection(db, "rooms", roomId as string, "rounds")), {
+      votes,
+      createdAt: serverTimestamp(),
+    });
     await updateDoc(doc(db, "rooms", roomId as string), { revealed: true });
   };
 
@@ -212,6 +248,23 @@ export default function RoomPage() {
     await updateDoc(doc(db, "rooms", roomId as string), {
       voteOptions: options,
     });
+  };
+
+  const formatTime = (ms: number) => {
+    const h = Math.floor(ms / 1000 / 60 / 60);
+    const m = Math.floor((ms / 1000 / 60) % 60);
+    const s = Math.floor((ms / 1000) % 60);
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  const handleFinalize = async () => {
+    setLoading(true);
+    try {
+      router.push(`/room/${roomId}/dashboard`);
+    } finally {
+      setLoading(false);
+      setConfirmOpen(false);
+    }
   };
 
   if (!joined) {
@@ -370,6 +423,44 @@ export default function RoomPage() {
                 <RefreshCcw className="w-4 h-4" /> Nova votação
               </Button>
             )}
+
+            <Button
+              onClick={() => setConfirmOpen(true)}
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold mt-2 hover:cursor-pointer"
+            >
+              Finalizar estimativa
+            </Button>
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <DialogContent className="sm:max-w-sm bg-neutral-900 text-white">
+                <DialogHeader>
+                  <DialogTitle>Confirmar ação</DialogTitle>
+                  <DialogDescription>
+                    Tem certeza que deseja finalizar a estimativa? Esta ação irá
+                    gerar a dashboard.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button
+                    className="hover:cursor-pointer"
+                    variant="ghost"
+                    onClick={() => setConfirmOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleFinalize}
+                    disabled={loading}
+                    className="flex items-center gap-2 hover:cursor-pointer"
+                    variant="secondary"
+                  >
+                    {loading ? "Finalizando..." : "Confirmar"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <div className="mt-4 text-sm text-gray-400">
+              {timeLeft > 0 && `Expira em ${formatTime(timeLeft)}`}
+            </div>
           </div>
         )}
       </aside>

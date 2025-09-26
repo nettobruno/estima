@@ -31,7 +31,6 @@ export default function Home() {
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-
     setIsCreating(true);
 
     const generateRoomId = Math.random()
@@ -39,9 +38,7 @@ export default function Home() {
       .substring(2, 8)
       .toUpperCase();
 
-    if (!auth.currentUser) {
-      await signInAnonymously(auth);
-    }
+    if (!auth.currentUser) await signInAnonymously(auth);
     const uid = auth.currentUser!.uid;
 
     await setDoc(doc(db, "rooms", generateRoomId), {
@@ -60,7 +57,6 @@ export default function Home() {
     setRoomId(generateRoomId);
     setRoomLink(`${window.location.origin}/room/${generateRoomId}`);
     setCurrentStep("room-created");
-
     setIsCreating(false);
   };
 
@@ -69,9 +65,7 @@ export default function Home() {
       await navigator.clipboard.writeText(roomLink);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
-    } catch (err) {
-      console.error(err);
-    }
+    } catch {}
   };
 
   const handleEnterRoom = () => router.push(`/room/${roomId}`);
