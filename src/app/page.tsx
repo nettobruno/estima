@@ -1,103 +1,143 @@
-import Image from "next/image";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { auth, db } from "../lib/firebase";
+import { signInAnonymously } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+
+type OnboardingSteps = "landing" | "create-room" | "room-created";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentStep, setCurrentStep] = useState<OnboardingSteps>("landing");
+  const [name, setName] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [roomLink, setRoomLink] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
+  const router = useRouter();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleCreateSession = () => setCurrentStep("create-room");
+
+  const handleCreateRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    const generateRoomId = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
+
+    if (!auth.currentUser) {
+      await signInAnonymously(auth);
+    }
+    const uid = auth.currentUser!.uid;
+
+    await setDoc(doc(db, "rooms", generateRoomId), {
+      ownerId: uid,
+      revealed: false,
+      createdAt: serverTimestamp(),
+    });
+
+    await setDoc(doc(db, "rooms", generateRoomId, "players", uid), {
+      name,
+      vote: null,
+      joinedAt: serverTimestamp(),
+      removed: false,
+    });
+
+    setRoomId(generateRoomId);
+    setRoomLink(`${window.location.origin}/room/${generateRoomId}`);
+    setCurrentStep("room-created");
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(roomLink);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEnterRoom = () => router.push(`/room/${roomId}`);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 font-sans">
+      {currentStep === "landing" && (
+        <>
+          <h1 className="text-7xl text-center font-bold mb-8">
+            Descomplicando suas{" "}
+            <span className="text-lime-400">estimativas</span>
+          </h1>
+          <p className="text-2xl text-center text-gray-300 max-w-2xl mb-4">
+            Uma ferramenta de planejamento gratuita e em tempo real, para
+            equipes modernas e ágeis.
+          </p>
+          <p className="text-2xl text-center text-lime-400 mb-12">
+            Sem conta, sem complicações.
+          </p>
+          <button
+            onClick={handleCreateSession}
+            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-4 px-12 rounded"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            Crie uma sessão agora
+          </button>
+        </>
+      )}
+
+      {currentStep === "create-room" && (
+        <form
+          onSubmit={handleCreateRoom}
+          className="flex flex-col items-center gap-6 w-full max-w-md bg-neutral-900 p-20 rounded"
+        >
+          <h2 className="text-2xl font-bold text-white">Inicie uma sessão</h2>
+          <input
+            type="text"
+            placeholder="Digite seu nome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 rounded border border-gray-300 bg-neutral-800 text-white"
+          />
+          <button
+            type="submit"
+            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-3 px-8 rounded"
+          >
+            Entrar na sala
+          </button>
+        </form>
+      )}
+
+      {currentStep === "room-created" && (
+        <div className="flex flex-col items-center gap-6 w-full max-w-md bg-neutral-900 p-20 rounded">
+          <h2 className="text-2xl font-bold text-white">
+            Sala criada com sucesso
+          </h2>
+          <p className="text-gray-300">Compartilhe este link com sua equipe:</p>
+
+          <div className="flex items-center gap-2 w-full">
+            <input
+              type="text"
+              value={roomLink}
+              readOnly
+              className="w-full px-4 py-3 rounded border border-gray-300 bg-neutral-800 text-white"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <button
+              onClick={handleCopyLink}
+              className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 px-4 rounded"
+            >
+              {linkCopied ? "Copiado!" : "Copiar"}
+            </button>
+          </div>
+
+          <button
+            onClick={handleEnterRoom}
+            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-3 px-8 rounded"
           >
-            Read our docs
-          </a>
+            Entrar na sala
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
     </div>
   );
 }
