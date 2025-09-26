@@ -20,9 +20,7 @@ O projeto inclui criação de salas, compartilhamento via link, votação em tem
 
 ## 📸 Screenshots
 
-![Landing](https://github.com/user-attachments/assets/abb79996-1c91-4295-b6a4-582783ab43b7)  
-![Login](https://github.com/user-attachments/assets/bdb0f7b8-7dfb-4d87-abde-e73c95f48800)  
-![Register](https://github.com/user-attachments/assets/9cc0b3b2-8b6a-48eb-ab79-527c9098aba0)
+<img width="1921" height="925" alt="landing-estima" src="https://github.com/user-attachments/assets/cda5a480-9058-4172-9097-feff57597472" />
 
 ---
 
