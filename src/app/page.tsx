@@ -23,6 +23,7 @@ export default function Home() {
   const [roomId, setRoomId] = useState("");
   const [roomLink, setRoomLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
 
   const handleCreateSession = () => setCurrentStep("create-room");
@@ -30,6 +31,8 @@ export default function Home() {
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    setIsCreating(true);
 
     const generateRoomId = Math.random()
       .toString(36)
@@ -57,6 +60,8 @@ export default function Home() {
     setRoomId(generateRoomId);
     setRoomLink(`${window.location.origin}/room/${generateRoomId}`);
     setCurrentStep("room-created");
+
+    setIsCreating(false);
   };
 
   const handleCopyLink = async () => {
@@ -117,9 +122,10 @@ export default function Home() {
             />
             <Button
               type="submit"
-              className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold hover:cursor-pointer"
+              disabled={isCreating}
+              className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Entrar na sala
+              {isCreating ? "Criando..." : "Entrar na sala"}
             </Button>
           </form>
         </DialogContent>
