@@ -14,8 +14,9 @@ import {
   updateDoc,
   writeBatch,
   serverTimestamp,
-  DocumentData,
   getDocs,
+  DocumentData,
+  QuerySnapshot,
 } from "firebase/firestore";
 
 type Player = {
@@ -25,10 +26,14 @@ type Player = {
   removed?: boolean;
 };
 
+type RoomData = {
+  ownerId?: string;
+  revealed?: boolean;
+};
+
 export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
-
   const [joined, setJoined] = useState(false);
   const [name, setName] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
@@ -39,18 +44,10 @@ export default function RoomPage() {
 
   useEffect(() => {
     let unsubAuth: (() => void) | undefined;
-
     const initAuth = async () => {
-      if (!auth.currentUser) {
-        try {
-          await signInAnonymously(auth);
-        } catch (err) {
-          console.error("Erro signin anon:", err);
-        }
-      }
+      if (!auth.currentUser) await signInAnonymously(auth);
       unsubAuth = onAuthStateChanged(auth, () => {});
     };
-
     initAuth();
     return () => unsubAuth && unsubAuth();
   }, []);
@@ -63,35 +60,35 @@ export default function RoomPage() {
 
     const unsubRoom = onSnapshot(roomRef, (snap) => {
       if (!snap.exists()) return;
-      const data = snap.data() as DocumentData;
-
+      const data = snap.data() as RoomData;
       setRoomRevealed(Boolean(data.revealed));
       setOwnerId(data.ownerId ?? null);
-
-      if (auth.currentUser) {
-        setIsHost(data.ownerId === auth.currentUser.uid);
-      }
+      if (auth.currentUser) setIsHost(data.ownerId === auth.currentUser.uid);
     });
 
-    const unsubPlayers = onSnapshot(q, (qsnap) => {
+    const unsubPlayers = onSnapshot(q, (qsnap: QuerySnapshot<DocumentData>) => {
       const list: Player[] = qsnap.docs
-        .map((d) => ({ id: d.id, ...(d.data() as any) }))
+        .map((d) => ({
+          id: d.id,
+          name: d.data().name,
+          vote: d.data().vote ?? null,
+          removed: d.data().removed ?? false,
+        }))
         .filter((p) => !p.removed);
-
       setPlayers(list);
-
       if (auth.currentUser) {
         const me =
           qsnap.docs
-            .map((d) => ({ id: d.id, ...(d.data() as any) }))
+            .map((d) => ({
+              id: d.id,
+              name: d.data().name,
+              vote: d.data().vote ?? null,
+              removed: d.data().removed ?? false,
+            }))
             .find((p) => p.id === auth.currentUser!.uid) ?? null;
-
         setCurrentPlayer(me);
         setJoined(Boolean(me && !me.removed));
-
-        if (me?.removed) {
-          router.push("/removed");
-        }
+        if (me?.removed) router.push("/removed");
       }
     });
 
@@ -105,7 +102,6 @@ export default function RoomPage() {
     e.preventDefault();
     if (!name.trim() || !roomId) return;
     if (!auth.currentUser) await signInAnonymously(auth);
-
     const uid = auth.currentUser!.uid;
     await setDoc(doc(db, "rooms", roomId, "players", uid), {
       name,
@@ -113,7 +109,6 @@ export default function RoomPage() {
       joinedAt: serverTimestamp(),
       removed: false,
     });
-
     setJoined(true);
   };
 
@@ -132,15 +127,12 @@ export default function RoomPage() {
   const handleReset = async () => {
     if (!ownerId || !auth.currentUser || auth.currentUser.uid !== ownerId)
       return;
-
     const playersCol = collection(db, "rooms", roomId, "players");
     const snapshot = await getDocs(playersCol);
     const batch = writeBatch(db);
-
     snapshot.forEach((d) => {
       batch.update(d.ref, { vote: null });
     });
-
     batch.update(doc(db, "rooms", roomId), { revealed: false });
     await batch.commit();
   };
@@ -149,7 +141,6 @@ export default function RoomPage() {
     if (!ownerId || !auth.currentUser || auth.currentUser.uid !== ownerId)
       return;
     if (playerId === ownerId) return;
-
     await updateDoc(doc(db, "rooms", roomId, "players", playerId), {
       removed: true,
     });
@@ -219,7 +210,6 @@ export default function RoomPage() {
             ))}
           </ul>
         </div>
-
         {isHost && (
           <div className="flex flex-col gap-2">
             {!roomRevealed ? (
@@ -240,7 +230,6 @@ export default function RoomPage() {
           </div>
         )}
       </aside>
-
       <main className="flex flex-1 items-center justify-center">
         <div className="grid grid-cols-2 gap-6">
           {["P", "M", "G", "GG"].map((size) => {
@@ -250,13 +239,11 @@ export default function RoomPage() {
                 key={size}
                 onClick={() => handleVote(size)}
                 disabled={roomRevealed}
-                className={`w-40 h-40 flex items-center justify-center text-4xl font-bold rounded-lg border-2 transition
-                  ${
-                    isSelected
-                      ? "border-lime-400 bg-neutral-800 scale-105"
-                      : "border-transparent bg-neutral-800 hover:border-lime-400 hover:scale-105"
-                  }
-                  ${roomRevealed ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`w-40 h-40 flex items-center justify-center text-4xl font-bold rounded-lg border-2 transition ${
+                  isSelected
+                    ? "border-lime-400 bg-neutral-800 scale-105"
+                    : "border-transparent bg-neutral-800 hover:border-lime-400 hover:scale-105"
+                } ${roomRevealed ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {size}
               </button>
