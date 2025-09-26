@@ -53,9 +53,9 @@ export default function RoomPage() {
   }, []);
 
   useEffect(() => {
-    if (!roomId) return;
-    const roomRef = doc(db, "rooms", roomId);
-    const playersCol = collection(db, "rooms", roomId, "players");
+    if (!roomId || typeof roomId !== "string") return;
+    const roomRef = doc(db, "rooms", roomId as string);
+    const playersCol = collection(db, "rooms", roomId as string, "players");
     const q = query(playersCol, orderBy("joinedAt"));
 
     const unsubRoom = onSnapshot(roomRef, (snap) => {
@@ -100,10 +100,10 @@ export default function RoomPage() {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !roomId) return;
+    if (!name.trim() || !roomId || typeof roomId !== "string") return;
     if (!auth.currentUser) await signInAnonymously(auth);
     const uid = auth.currentUser!.uid;
-    await setDoc(doc(db, "rooms", roomId, "players", uid), {
+    await setDoc(doc(db, "rooms", roomId as string, "players", uid as string), {
       name,
       vote: null,
       joinedAt: serverTimestamp(),
@@ -113,37 +113,67 @@ export default function RoomPage() {
   };
 
   const handleVote = async (vote: string) => {
-    if (!auth.currentUser || roomRevealed) return;
+    if (
+      !auth.currentUser ||
+      roomRevealed ||
+      !roomId ||
+      typeof roomId !== "string"
+    )
+      return;
     const uid = auth.currentUser.uid;
-    await updateDoc(doc(db, "rooms", roomId, "players", uid), { vote });
+    await updateDoc(
+      doc(db, "rooms", roomId as string, "players", uid as string),
+      { vote }
+    );
   };
 
   const handleReveal = async () => {
-    if (!ownerId || !auth.currentUser || auth.currentUser.uid !== ownerId)
+    if (
+      !ownerId ||
+      !auth.currentUser ||
+      auth.currentUser.uid !== ownerId ||
+      !roomId ||
+      typeof roomId !== "string"
+    )
       return;
-    await updateDoc(doc(db, "rooms", roomId), { revealed: true });
+    await updateDoc(doc(db, "rooms", roomId as string), { revealed: true });
   };
 
   const handleReset = async () => {
-    if (!ownerId || !auth.currentUser || auth.currentUser.uid !== ownerId)
+    if (
+      !ownerId ||
+      !auth.currentUser ||
+      auth.currentUser.uid !== ownerId ||
+      !roomId ||
+      typeof roomId !== "string"
+    )
       return;
-    const playersCol = collection(db, "rooms", roomId, "players");
+    const playersCol = collection(db, "rooms", roomId as string, "players");
     const snapshot = await getDocs(playersCol);
     const batch = writeBatch(db);
     snapshot.forEach((d) => {
       batch.update(d.ref, { vote: null });
     });
-    batch.update(doc(db, "rooms", roomId), { revealed: false });
+    batch.update(doc(db, "rooms", roomId as string), { revealed: false });
     await batch.commit();
   };
 
   const handleRemovePlayer = async (playerId: string) => {
-    if (!ownerId || !auth.currentUser || auth.currentUser.uid !== ownerId)
+    if (
+      !ownerId ||
+      !auth.currentUser ||
+      auth.currentUser.uid !== ownerId ||
+      !roomId ||
+      typeof roomId !== "string"
+    )
       return;
     if (playerId === ownerId) return;
-    await updateDoc(doc(db, "rooms", roomId, "players", playerId), {
-      removed: true,
-    });
+    await updateDoc(
+      doc(db, "rooms", roomId as string, "players", playerId as string),
+      {
+        removed: true,
+      }
+    );
   };
 
   if (!joined) {
