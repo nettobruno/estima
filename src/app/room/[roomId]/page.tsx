@@ -28,6 +28,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Trash2, Check, Eye, RefreshCcw, Minus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Player = {
   id: string;
@@ -39,6 +40,15 @@ type Player = {
 type RoomData = {
   ownerId?: string;
   revealed?: boolean;
+  voteOptions?: string[];
+};
+
+const SCALE_OPTIONS: { [key: string]: string[] } = {
+  default: ["P", "M", "G", "GG"],
+  fibonacci: ["1", "2", "3", "5", "8", "13", "20"],
+  named: ["XS", "P", "M", "G", "XL", "XXL"],
+  symbols: ["☕", "☕☕", "☕☕☕", "☕☕☕☕"],
+  special: ["?", "P", "M", "G", "GG", "∞"],
 };
 
 export default function RoomPage() {
@@ -53,6 +63,9 @@ export default function RoomPage() {
   const [isHost, setIsHost] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
+  const [voteOptions, setVoteOptions] = useState<string[]>(
+    SCALE_OPTIONS.default
+  );
 
   useEffect(() => {
     let unsubAuth: (() => void) | undefined;
@@ -76,6 +89,7 @@ export default function RoomPage() {
       setRoomRevealed(Boolean(data.revealed));
       setOwnerId(data.ownerId ?? null);
       if (auth.currentUser) setIsHost(data.ownerId === auth.currentUser.uid);
+      setVoteOptions(data.voteOptions ?? SCALE_OPTIONS.default);
     });
 
     const unsubPlayers = onSnapshot(q, (qsnap: QuerySnapshot<DocumentData>) => {
@@ -165,9 +179,7 @@ export default function RoomPage() {
     const playersCol = collection(db, "rooms", roomId as string, "players");
     const snapshot = await getDocs(playersCol);
     const batch = writeBatch(db);
-    snapshot.forEach((d) => {
-      batch.update(d.ref, { vote: null });
-    });
+    snapshot.forEach((d) => batch.update(d.ref, { vote: null }));
     batch.update(doc(db, "rooms", roomId as string), { revealed: false });
     await batch.commit();
   };
@@ -186,6 +198,20 @@ export default function RoomPage() {
       doc(db, "rooms", roomId as string, "players", playerId as string),
       { removed: true }
     );
+  };
+
+  const handleChangeVoteOptions = async (options: string[]) => {
+    if (
+      !ownerId ||
+      !auth.currentUser ||
+      auth.currentUser.uid !== ownerId ||
+      !roomId ||
+      typeof roomId !== "string"
+    )
+      return;
+    await updateDoc(doc(db, "rooms", roomId as string), {
+      voteOptions: options,
+    });
   };
 
   if (!joined) {
@@ -303,6 +329,29 @@ export default function RoomPage() {
               </li>
             ))}
           </ul>
+          {isHost && (
+            <div className="mt-12 flex flex-col gap-2">
+              <label className="text-sm text-gray-300">
+                Escala de votação:
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(SCALE_OPTIONS).map(([key, options]) => (
+                  <Button
+                    key={key}
+                    onClick={() => handleChangeVoteOptions(options)}
+                    className={cn(
+                      "text-sm rounded-full px-3 transition-all hover:scale-105 hover:cursor-pointer",
+                      voteOptions.join() === options.join()
+                        ? "bg-lime-400 text-zinc-900 hover:bg-lime-500"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    )}
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         {isHost && (
           <div className="flex flex-col gap-2 mt-4">
@@ -326,14 +375,14 @@ export default function RoomPage() {
       </aside>
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {["P", "M", "G", "GG"].map((size) => {
+          {voteOptions.map((size) => {
             const isSelected = currentPlayer?.vote === size;
             return (
               <Button
                 key={size}
                 onClick={() => handleVote(size)}
                 disabled={roomRevealed}
-                className={`w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold hover:cursor-pointer rounded-full border-2 transition ${
+                className={`w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold hover:cursor-pointer rounded-full border-2 transition break-words whitespace-normal ${
                   isSelected
                     ? "border-lime-400 bg-neutral-800 scale-105"
                     : "border-transparent bg-neutral-800 hover:border-lime-400 hover:scale-105"
