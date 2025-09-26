@@ -52,6 +52,7 @@ export default function RoomPage() {
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
 
   useEffect(() => {
     let unsubAuth: (() => void) | undefined;
@@ -208,9 +209,15 @@ export default function RoomPage() {
               <Button
                 type="submit"
                 disabled={isJoining}
-                className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
               >
-                {isJoining ? "Entrando..." : "Entrar"}
+                {isJoining ? (
+                  "Entrando..."
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" /> Entrar
+                  </>
+                )}
               </Button>
             </form>
           </DialogContent>
@@ -221,6 +228,41 @@ export default function RoomPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-neutral-950 text-white">
+      <Dialog
+        open={!!playerToRemove}
+        onOpenChange={() => setPlayerToRemove(null)}
+      >
+        <DialogContent className="sm:max-w-sm bg-neutral-900 text-white">
+          <DialogHeader>
+            <DialogTitle>Remover jogador</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja remover "{playerToRemove?.name}" da sala?
+              Essa ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              className="hover:cursor-pointer"
+              variant="ghost"
+              onClick={() => setPlayerToRemove(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="hover:cursor-pointer"
+              variant="destructive"
+              onClick={async () => {
+                if (playerToRemove) {
+                  await handleRemovePlayer(playerToRemove.id);
+                  setPlayerToRemove(null);
+                }
+              }}
+            >
+              Remover
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <aside className="w-full md:w-64 bg-neutral-900 p-4 sm:p-6 flex flex-col justify-between">
         <div>
           <h2 className="text-xl font-bold mb-2 sm:mb-4">Jogadores</h2>
@@ -248,10 +290,9 @@ export default function RoomPage() {
                   ) : (
                     <Minus className="text-gray-500 w-5 h-5" />
                   )}
-
                   {isHost && player.id !== ownerId && (
                     <Button
-                      onClick={() => handleRemovePlayer(player.id)}
+                      onClick={() => setPlayerToRemove(player)}
                       variant="destructive"
                       className="w-8 h-8 p-0 rounded-full flex items-center justify-center hover:cursor-pointer"
                     >
