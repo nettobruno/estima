@@ -20,6 +20,13 @@ import {
 } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type Player = {
   id: string;
@@ -182,27 +189,31 @@ export default function RoomPage() {
   if (!joined) {
     return (
       <div className="flex items-center justify-center h-screen bg-neutral-950 p-4">
-        <form
-          onSubmit={handleJoin}
-          className="flex flex-col items-center gap-4 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-12 rounded"
-        >
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-4">
-            Entrar na sala {roomId}
-          </h2>
-          <Input
-            type="text"
-            placeholder="Digite seu nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Button
-            type="submit"
-            disabled={isJoining}
-            className="w-full sm:w-auto bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isJoining ? "Entrando..." : "Entrar"}
-          </Button>
-        </form>
+        <Dialog open={true} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md bg-neutral-900 text-white">
+            <DialogHeader>
+              <DialogTitle>Entrar na sala {roomId}</DialogTitle>
+              <DialogDescription>
+                Digite seu nome para entrar na sala
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleJoin} className="flex flex-col gap-4 mt-4">
+              <Input
+                type="text"
+                placeholder="Digite seu nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Button
+                type="submit"
+                disabled={isJoining}
+                className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isJoining ? "Entrando..." : "Entrar"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
