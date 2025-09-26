@@ -18,6 +18,8 @@ import {
   DocumentData,
   QuerySnapshot,
 } from "firebase/firestore";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type Player = {
   id: string;
@@ -41,6 +43,7 @@ export default function RoomPage() {
   const [roomRevealed, setRoomRevealed] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
     let unsubAuth: (() => void) | undefined;
@@ -101,6 +104,7 @@ export default function RoomPage() {
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !roomId || typeof roomId !== "string") return;
+    setIsJoining(true);
     if (!auth.currentUser) await signInAnonymously(auth);
     const uid = auth.currentUser!.uid;
     await setDoc(doc(db, "rooms", roomId as string, "players", uid as string), {
@@ -110,6 +114,7 @@ export default function RoomPage() {
       removed: false,
     });
     setJoined(true);
+    setIsJoining(false);
   };
 
   const handleVote = async (vote: string) => {
@@ -178,25 +183,25 @@ export default function RoomPage() {
     return (
       <div className="flex items-center justify-center h-screen bg-neutral-950 p-4">
         <form
-          className="flex flex-col items-center gap-4 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-12 rounded"
           onSubmit={handleJoin}
+          className="flex flex-col items-center gap-4 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-12 rounded"
         >
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-4">
             Entrar na sala {roomId}
           </h2>
-          <input
+          <Input
             type="text"
             placeholder="Digite seu nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 rounded border border-gray-300 bg-neutral-800 text-white"
           />
-          <button
+          <Button
             type="submit"
-            className="bg-lime-400 hover:bg-lime-500 text-gray-900 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded w-full sm:w-auto"
+            disabled={isJoining}
+            className="w-full sm:w-auto bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Entrar
-          </button>
+            {isJoining ? "Entrando..." : "Entrar"}
+          </Button>
         </form>
       </div>
     );
@@ -232,12 +237,13 @@ export default function RoomPage() {
                     <span className="text-gray-500 text-lg">—</span>
                   )}
                   {isHost && player.id !== ownerId && (
-                    <button
+                    <Button
                       onClick={() => handleRemovePlayer(player.id)}
-                      className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white transition"
+                      variant="destructive"
+                      className="w-8 h-8 p-0 rounded-full text-white"
                     >
                       🗑
-                    </button>
+                    </Button>
                   )}
                 </div>
               </li>
@@ -247,19 +253,19 @@ export default function RoomPage() {
         {isHost && (
           <div className="flex flex-col gap-2 mt-4">
             {!roomRevealed ? (
-              <button
-                className="bg-lime-400 text-gray-900 font-bold px-4 py-2 rounded hover:bg-lime-500"
+              <Button
                 onClick={handleReveal}
+                className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold hover:cursor-pointer"
               >
                 Revelar votos
-              </button>
+              </Button>
             ) : (
-              <button
-                className="bg-red-400 text-gray-900 font-bold px-4 py-2 rounded hover:bg-red-500"
+              <Button
                 onClick={handleReset}
+                className="bg-red-400 hover:bg-red-500 text-zinc-900 font-bold hover:cursor-pointer"
               >
                 Nova votação
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -269,18 +275,18 @@ export default function RoomPage() {
           {["P", "M", "G", "GG"].map((size) => {
             const isSelected = currentPlayer?.vote === size;
             return (
-              <button
+              <Button
                 key={size}
                 onClick={() => handleVote(size)}
                 disabled={roomRevealed}
-                className={`w-24 sm:w-32 md:w-36 lg:w-40 h-24 sm:h-32 md:h-36 lg:h-40 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold rounded-lg border-2 transition ${
+                className={`w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold hover:cursor-pointer rounded-full border-2 transition ${
                   isSelected
                     ? "border-lime-400 bg-neutral-800 scale-105"
                     : "border-transparent bg-neutral-800 hover:border-lime-400 hover:scale-105"
                 } ${roomRevealed ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {size}
-              </button>
+              </Button>
             );
           })}
         </div>
