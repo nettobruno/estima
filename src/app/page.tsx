@@ -5,6 +5,15 @@ import { useState } from "react";
 import { auth, db } from "../lib/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type OnboardingSteps = "landing" | "create-room" | "room-created";
 
@@ -63,10 +72,10 @@ export default function Home() {
   const handleEnterRoom = () => router.push(`/room/${roomId}`);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 font-sans w-full overflow-x-hidden">
+    <div className="bg-zinc-900 flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 font-sans w-full overflow-x-hidden">
       {currentStep === "landing" && (
         <div className="w-full max-w-screen-sm">
-          <h1 className="text-4xl sm:text-7xl text-center font-bold mb-6 sm:mb-8 px-2 sm:px-0 break-words">
+          <h1 className="text-white text-4xl sm:text-7xl text-center font-bold mb-6 sm:mb-8 px-2 sm:px-0 break-words">
             Descomplicando suas{" "}
             <span className="text-lime-400">estimativas</span>
           </h1>
@@ -78,70 +87,72 @@ export default function Home() {
             Sem conta, sem complicações.
           </p>
           <div className="flex justify-center">
-            <button
+            <Button
               onClick={handleCreateSession}
-              className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-3 px-6 sm:py-4 sm:px-12 rounded w-full sm:w-auto"
+              className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold text-md py-3 px-6 sm:py-8 sm:px-12 rounded w-full sm:w-auto hover:cursor-pointer"
             >
               Crie uma sessão agora
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
-      {currentStep === "create-room" && (
-        <form
-          onSubmit={handleCreateRoom}
-          className="flex flex-col items-center gap-4 sm:gap-6 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-20 rounded"
-        >
-          <h2 className="text-lg sm:text-2xl font-bold text-white text-center break-words">
-            Inicie uma sessão
-          </h2>
-          <input
-            type="text"
-            placeholder="Digite seu nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 rounded border border-gray-300 bg-neutral-800 text-white"
-          />
-          <button
-            type="submit"
-            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded w-full"
-          >
-            Entrar na sala
-          </button>
-        </form>
-      )}
-
-      {currentStep === "room-created" && (
-        <div className="flex flex-col items-center gap-4 sm:gap-6 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-20 rounded">
-          <h2 className="text-lg sm:text-2xl font-bold text-white text-center break-words">
-            Sala criada com sucesso
-          </h2>
-          <p className="text-gray-300 text-center">
-            Compartilhe este link com sua equipe:
-          </p>
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
-            <input
+      <Dialog
+        open={currentStep === "create-room"}
+        onOpenChange={() => setCurrentStep("landing")}
+      >
+        <DialogContent className="sm:max-w-md bg-zinc-900 text-white border border-zinc-800 shadow-xl">
+          <DialogHeader>
+            <DialogTitle>Inicie uma sessão</DialogTitle>
+            <DialogDescription>
+              Digite seu nome para criar a sala
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateRoom} className="flex flex-col gap-4">
+            <Input
               type="text"
-              value={roomLink}
-              readOnly
-              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded border border-gray-300 bg-neutral-800 text-white w-full"
+              placeholder="Digite seu nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
-            <button
+            <Button
+              type="submit"
+              className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold hover:cursor-pointer"
+            >
+              Entrar na sala
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={currentStep === "room-created"}
+        onOpenChange={() => setCurrentStep("landing")}
+      >
+        <DialogContent className="sm:max-w-md bg-zinc-900 text-white border border-zinc-800 shadow-xl">
+          <DialogHeader>
+            <DialogTitle>Sala criada com sucesso</DialogTitle>
+            <DialogDescription>
+              Compartilhe este link com sua equipe:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+            <Input type="text" value={roomLink} readOnly className="w-full" />
+            <Button
               onClick={handleCopyLink}
-              className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 px-4 rounded w-full sm:w-auto"
+              className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold w-full sm:w-auto hover:cursor-pointer"
             >
               {linkCopied ? "Copiado!" : "Copiar"}
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
             onClick={handleEnterRoom}
-            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded w-full sm:w-auto"
+            className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold w-full sm:w-auto hover:cursor-pointer"
           >
             Entrar na sala
-          </button>
-        </div>
-      )}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
