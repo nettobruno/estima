@@ -63,23 +63,23 @@ export default function Home() {
   const handleEnterRoom = () => router.push(`/room/${roomId}`);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 font-sans">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 font-sans">
       {currentStep === "landing" && (
         <>
-          <h1 className="text-7xl text-center font-bold mb-8">
+          <h1 className="text-5xl sm:text-7xl text-center font-bold mb-6 sm:mb-8 px-4 sm:px-0">
             Descomplicando suas{" "}
             <span className="text-lime-400">estimativas</span>
           </h1>
-          <p className="text-2xl text-center text-gray-300 max-w-2xl mb-4">
+          <p className="text-lg sm:text-2xl text-center text-gray-300 max-w-xl sm:max-w-2xl mb-3 sm:mb-4 px-2 sm:px-0">
             Uma ferramenta de planejamento gratuita e em tempo real, para
             equipes modernas e ágeis.
           </p>
-          <p className="text-2xl text-center text-lime-400 mb-12">
+          <p className="text-lg sm:text-2xl text-center text-lime-400 mb-8 sm:mb-12 px-2 sm:px-0">
             Sem conta, sem complicações.
           </p>
           <button
             onClick={handleCreateSession}
-            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-4 px-12 rounded"
+            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-3 px-6 sm:py-4 sm:px-12 rounded"
           >
             Crie uma sessão agora
           </button>
@@ -89,19 +89,21 @@ export default function Home() {
       {currentStep === "create-room" && (
         <form
           onSubmit={handleCreateRoom}
-          className="flex flex-col items-center gap-6 w-full max-w-md bg-neutral-900 p-20 rounded"
+          className="flex flex-col items-center gap-4 sm:gap-6 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-20 rounded"
         >
-          <h2 className="text-2xl font-bold text-white">Inicie uma sessão</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
+            Inicie uma sessão
+          </h2>
           <input
             type="text"
             placeholder="Digite seu nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded border border-gray-300 bg-neutral-800 text-white"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 rounded border border-gray-300 bg-neutral-800 text-white"
           />
           <button
             type="submit"
-            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-3 px-8 rounded"
+            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded"
           >
             Entrar na sala
           </button>
@@ -109,22 +111,24 @@ export default function Home() {
       )}
 
       {currentStep === "room-created" && (
-        <div className="flex flex-col items-center gap-6 w-full max-w-md bg-neutral-900 p-20 rounded">
-          <h2 className="text-2xl font-bold text-white">
+        <div className="flex flex-col items-center gap-4 sm:gap-6 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-20 rounded">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
             Sala criada com sucesso
           </h2>
-          <p className="text-gray-300">Compartilhe este link com sua equipe:</p>
+          <p className="text-gray-300 text-center">
+            Compartilhe este link com sua equipe:
+          </p>
 
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
             <input
               type="text"
               value={roomLink}
               readOnly
-              className="w-full px-4 py-3 rounded border border-gray-300 bg-neutral-800 text-white"
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded border border-gray-300 bg-neutral-800 text-white w-full"
             />
             <button
               onClick={handleCopyLink}
-              className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 px-4 rounded"
+              className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 px-4 rounded w-full sm:w-auto"
             >
               {linkCopied ? "Copiado!" : "Copiar"}
             </button>
@@ -132,7 +136,7 @@ export default function Home() {
 
           <button
             onClick={handleEnterRoom}
-            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-3 px-8 rounded"
+            className="bg-lime-400 hover:bg-lime-500 text-gray-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded w-full sm:w-auto"
           >
             Entrar na sala
           </button>

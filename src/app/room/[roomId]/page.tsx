@@ -170,20 +170,18 @@ export default function RoomPage() {
     if (playerId === ownerId) return;
     await updateDoc(
       doc(db, "rooms", roomId as string, "players", playerId as string),
-      {
-        removed: true,
-      }
+      { removed: true }
     );
   };
 
   if (!joined) {
     return (
-      <div className="flex items-center justify-center h-screen bg-neutral-950">
+      <div className="flex items-center justify-center h-screen bg-neutral-950 p-4">
         <form
+          className="flex flex-col items-center gap-4 w-full max-w-sm sm:max-w-md bg-neutral-900 p-6 sm:p-12 rounded"
           onSubmit={handleJoin}
-          className="flex flex-col items-center gap-6 w-full max-w-md bg-neutral-900 p-12 rounded"
         >
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-4">
             Entrar na sala {roomId}
           </h2>
           <input
@@ -191,11 +189,11 @@ export default function RoomPage() {
             placeholder="Digite seu nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded border border-gray-300 bg-neutral-800 text-white"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 rounded border border-gray-300 bg-neutral-800 text-white"
           />
           <button
             type="submit"
-            className="bg-lime-400 hover:bg-lime-500 text-gray-900 font-bold py-3 px-8 rounded"
+            className="bg-lime-400 hover:bg-lime-500 text-gray-900 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded w-full sm:w-auto"
           >
             Entrar
           </button>
@@ -205,54 +203,60 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="flex h-screen bg-neutral-950 text-white">
-      <aside className="w-64 bg-neutral-900 p-6 flex flex-col justify-between">
+    <div className="flex flex-col md:flex-row h-screen bg-neutral-950 text-white">
+      <aside className="w-full md:w-64 bg-neutral-900 p-4 sm:p-6 flex flex-col justify-between">
         <div>
-          <h2 className="text-xl font-bold mb-4">Jogadores</h2>
+          <h2 className="text-xl font-bold mb-2 sm:mb-4">Jogadores</h2>
           <ul className="space-y-2">
             {players.map((player) => (
               <li
                 key={player.id}
-                className="flex justify-between items-center bg-neutral-800 px-3 py-2 rounded"
+                className="flex flex-col sm:flex-row justify-between items-center bg-neutral-800 p-3 sm:p-4 rounded-lg shadow-sm hover:bg-neutral-700 transition gap-3"
               >
-                <span>
-                  {player.name}
-                  {player.id === ownerId ? " (host)" : ""}
-                </span>
-                {roomRevealed ? (
-                  <span className="font-bold text-lime-400">
-                    {player.vote ?? "-"}
-                  </span>
-                ) : player.vote ? (
-                  <span className="text-gray-400">✔</span>
-                ) : (
-                  <span className="text-gray-500">—</span>
-                )}
-                {isHost && player.id !== ownerId && (
-                  <button
-                    onClick={() => handleRemovePlayer(player.id)}
-                    className="ml-2 text-sm px-2 py-1 rounded bg-red-600 hover:bg-red-500 text-white"
-                  >
-                    Remover
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-white">{player.name}</span>
+                  {player.id === ownerId && (
+                    <span className="text-sm text-lime-400 font-semibold">
+                      (host)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {roomRevealed ? (
+                    <span className="font-bold text-lime-400 text-lg">
+                      {player.vote ?? "-"}
+                    </span>
+                  ) : player.vote ? (
+                    <span className="text-green-400 text-lg">✔</span>
+                  ) : (
+                    <span className="text-gray-500 text-lg">—</span>
+                  )}
+                  {isHost && player.id !== ownerId && (
+                    <button
+                      onClick={() => handleRemovePlayer(player.id)}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white transition"
+                    >
+                      🗑
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         </div>
         {isHost && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-4">
             {!roomRevealed ? (
               <button
-                onClick={handleReveal}
                 className="bg-lime-400 text-gray-900 font-bold px-4 py-2 rounded hover:bg-lime-500"
+                onClick={handleReveal}
               >
                 Revelar votos
               </button>
             ) : (
               <button
-                onClick={handleReset}
                 className="bg-red-400 text-gray-900 font-bold px-4 py-2 rounded hover:bg-red-500"
+                onClick={handleReset}
               >
                 Nova votação
               </button>
@@ -260,8 +264,8 @@ export default function RoomPage() {
           </div>
         )}
       </aside>
-      <main className="flex flex-1 items-center justify-center">
-        <div className="grid grid-cols-2 gap-6">
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {["P", "M", "G", "GG"].map((size) => {
             const isSelected = currentPlayer?.vote === size;
             return (
@@ -269,7 +273,7 @@ export default function RoomPage() {
                 key={size}
                 onClick={() => handleVote(size)}
                 disabled={roomRevealed}
-                className={`w-40 h-40 flex items-center justify-center text-4xl font-bold rounded-lg border-2 transition ${
+                className={`w-24 sm:w-32 md:w-36 lg:w-40 h-24 sm:h-32 md:h-36 lg:h-40 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold rounded-lg border-2 transition ${
                   isSelected
                     ? "border-lime-400 bg-neutral-800 scale-105"
                     : "border-transparent bg-neutral-800 hover:border-lime-400 hover:scale-105"
