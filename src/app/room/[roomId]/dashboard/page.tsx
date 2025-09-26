@@ -17,7 +17,7 @@ import {
 
 type Round = {
   votes: { [playerId: string]: string };
-  createdAt: any;
+  createdAt: Date;
 };
 
 type Player = {

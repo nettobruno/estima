@@ -17,6 +17,7 @@ import {
   getDocs,
   DocumentData,
   QuerySnapshot,
+  type Timestamp,
 } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,12 +42,7 @@ type RoomData = {
   ownerId?: string;
   revealed?: boolean;
   voteOptions?: string[];
-  createdAt?: any;
-};
-
-type Round = {
-  votes: { [playerId: string]: string };
-  createdAt: any;
+  createdAt?: Timestamp;
 };
 
 const SCALE_OPTIONS: { [key: string]: string[] } = {
@@ -315,7 +311,7 @@ export default function RoomPage() {
           <DialogHeader>
             <DialogTitle>Remover jogador</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja remover "{playerToRemove?.name}" da sala?
+              Tem certeza que deseja remover ´${playerToRemove?.name}´ da sala?
               Essa ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
