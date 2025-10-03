@@ -100,7 +100,12 @@ export default function Home() {
         open={currentStep === "create-room"}
         onOpenChange={() => setCurrentStep("landing")}
       >
-        <DialogContent className="sm:max-w-md bg-zinc-900 text-white border border-zinc-800 shadow-xl">
+        <DialogContent
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          showCloseButton={false}
+          className="sm:max-w-md bg-zinc-900 text-white border border-zinc-800 shadow-xl"
+        >
           <DialogHeader>
             <DialogTitle>Inicie uma sessão</DialogTitle>
             <DialogDescription>
@@ -129,7 +134,12 @@ export default function Home() {
         open={currentStep === "room-created"}
         onOpenChange={() => setCurrentStep("landing")}
       >
-        <DialogContent className="sm:max-w-md bg-zinc-900 text-white border border-zinc-800 shadow-xl">
+        <DialogContent
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          showCloseButton={false}
+          className="sm:max-w-md bg-zinc-900 text-white border border-zinc-800 shadow-xl"
+        >
           <DialogHeader>
             <DialogTitle>Sala criada com sucesso</DialogTitle>
             <DialogDescription>
