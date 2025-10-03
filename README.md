@@ -7,7 +7,7 @@
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 
 Estima é um planning poker gratuito para equipes ágeis, desenvolvido com [Next.js](https://nextjs.org/) e [Tailwind CSS](https://tailwindcss.com/).  
-O projeto inclui criação de salas, compartilhamento via link, votação em tempo real e gerenciamento de jogadores.
+O projeto inclui criação de salas, compartilhamento via link, votação em tempo real e gerenciamento de participantes.
 
 ---
 

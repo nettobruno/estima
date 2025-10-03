@@ -309,7 +309,7 @@ export default function RoomPage() {
       >
         <DialogContent className="sm:max-w-sm bg-neutral-900 text-white">
           <DialogHeader>
-            <DialogTitle>Remover jogador</DialogTitle>
+            <DialogTitle>Remover participantes</DialogTitle>
             <DialogDescription>
               Tem certeza que deseja remover ´${playerToRemove?.name}´ da sala?
               Essa ação não pode ser desfeita.
@@ -340,7 +340,7 @@ export default function RoomPage() {
       </Dialog>
       <aside className="w-full md:w-64 bg-neutral-900 p-4 sm:p-6 flex flex-col justify-between">
         <div>
-          <h2 className="text-xl font-bold mb-2 sm:mb-4">Jogadores</h2>
+          <h2 className="text-xl font-bold mb-2 sm:mb-4">Participantes</h2>
           <ul className="space-y-2">
             {players.map((player) => (
               <li
