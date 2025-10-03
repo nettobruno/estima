@@ -24,6 +24,8 @@ export default function Home() {
   const [roomLink, setRoomLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isEntering, setIsEntering] = useState(false);
+
   const router = useRouter();
 
   const handleCreateSession = () => setCurrentStep("create-room");
@@ -68,7 +70,10 @@ export default function Home() {
     } catch {}
   };
 
-  const handleEnterRoom = () => router.push(`/room/${roomId}`);
+  const handleEnterRoom = () => {
+    setIsEntering(true);
+    router.push(`/room/${roomId}`);
+  };
 
   return (
     <div className="bg-zinc-900 flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 font-sans w-full overflow-x-hidden">
@@ -159,7 +164,7 @@ export default function Home() {
             onClick={handleEnterRoom}
             className="bg-lime-400 hover:bg-lime-500 text-zinc-900 font-bold w-full sm:w-auto hover:cursor-pointer"
           >
-            Entrar na sala
+            {isEntering ? "Entrando..." : "Entrar na sala"}
           </Button>
         </DialogContent>
       </Dialog>
