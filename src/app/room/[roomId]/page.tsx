@@ -307,18 +307,22 @@ export default function RoomPage() {
         open={!!playerToRemove}
         onOpenChange={() => setPlayerToRemove(null)}
       >
-        <DialogContent className="sm:max-w-sm bg-neutral-900 text-white">
+        <DialogContent
+          showCloseButton={false}
+          className="sm:max-w-sm bg-neutral-900 text-white"
+        >
           <DialogHeader>
             <DialogTitle>Remover participantes</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja remover ´${playerToRemove?.name}´ da sala?
-              Essa ação não pode ser desfeita.
+              Tem certeza que deseja remover{" "}
+              <strong>{playerToRemove?.name}</strong> da sala? Essa ação não
+              pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 flex justify-end gap-2">
             <Button
               className="hover:cursor-pointer"
-              variant="ghost"
+              variant="secondary"
               onClick={() => setPlayerToRemove(null)}
             >
               Cancelar
